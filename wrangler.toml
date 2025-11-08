@@ -1,0 +1,13 @@
+compatibility_date = "2025-11-08"
+workers_dev = true
+
+# THIS IS THE MAGIC LINE WRANGLER 4 NEEDS
+main = "src/index.js"
+
+# Force Modules format (default anyway, but we nail it)
+[build]
+command = ""
+
+# Explicitly tell it we're using Modules ES format
+[worker]
+type = "esm"
