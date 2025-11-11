@@ -1,0 +1,13 @@
+{
+  "name": "rex-factory",
+  "version": "1.0.0",
+  "private": true,
+  "main": "factory.mjs",
+  "scripts": {
+    "start": "node factory.mjs",
+    "deploy": "node factory.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "^3.78.0"
+  }
+}
